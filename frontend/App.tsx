@@ -8,12 +8,13 @@ import { ShopPage } from './pages/ShopPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { LogoutPage } from './pages/LogoutPage';
+import { UserProfilePage } from './pages/UserProfilePage';
 import { Toast, ToastType } from './components/Toast';
 import { LiveConcierge } from './components/LiveConcierge';
 import { AIChatWidget } from './components/AIChatWidget';
 import { api } from './services/apiService';
 import { Laptop, CartItem, User, Order } from './types';
-import { 
+import {
   Trash2, Plus, Minus, ShoppingBag, ArrowRight, Mail, User as UserIcon, Lock, Key, ShieldCheck
 } from 'lucide-react';
 
@@ -21,7 +22,7 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentPage, setCurrentPage] = useState('landing');
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [toast, setToast] = useState<{message: string, type: ToastType} | null>(null);
+  const [toast, setToast] = useState<{ message: string, type: ToastType } | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>((localStorage.getItem('luxe_theme') as 'dark' | 'light') || 'dark');
   const [isLiveConciergeOpen, setIsLiveConciergeOpen] = useState(false);
 
@@ -61,7 +62,7 @@ const App: React.FC = () => {
   const handleLogin = async (email: string) => {
     // Regex Validation
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return notify("Identity: Invalid email format.", 'error');
-    
+
     try {
       const u = await api.login(email);
       if (u) {
@@ -99,11 +100,12 @@ const App: React.FC = () => {
       case 'home': return <HomePage onPageChange={handlePageChange} onProductClick={() => setCurrentPage('shop')} onOpenConcierge={() => setIsLiveConciergeOpen(true)} />;
       case 'shop': return <ShopPage onProductClick={(id) => notify("Technical specs detail pending implementation.")} />;
       case 'admin': return <AdminDashboard />;
-      case 'cart': return <CartPage cart={cart} total={cartTotal} onUpdateQty={(id: string, d: number) => setCart(prev => prev.map(i => i.id === id ? {...i, quantity: Math.max(1, i.quantity+d)} : i))} onRemove={(id: string) => setCart(prev => prev.filter(i => i.id !== id))} onCheckout={() => handlePageChange('checkout')} />;
+      case 'cart': return <CartPage cart={cart} total={cartTotal} onUpdateQty={(id: string, d: number) => setCart(prev => prev.map(i => i.id === id ? { ...i, quantity: Math.max(1, i.quantity + d) } : i))} onRemove={(id: string) => setCart(prev => prev.filter(i => i.id !== id))} onCheckout={() => handlePageChange('checkout')} />;
       case 'login': return <LoginPage onLogin={handleLogin} onPageChange={handlePageChange} />;
       case 'logout': return <LogoutPage onConfirm={handleLogout} onCancel={() => handlePageChange('home')} />;
       case 'register': return <RegisterPage onRegister={async (n, e) => { try { await api.register(n, e); notify('Registered.'); handlePageChange('login'); } catch (err: any) { notify(err.message, 'error'); } }} onPageChange={handlePageChange} />;
       case 'checkout': return <CheckoutPage cart={cart} total={cartTotal} onPlaceOrder={async (addr, pay) => { try { await api.createOrder({ userId: currentUser?.id || 'guest', items: cart, total: cartTotal, status: 'Pending', paymentMethod: pay, shippingAddress: addr }); setCart([]); notify('Order Transmitted.'); handlePageChange('home'); } catch (err: any) { notify(err.message, 'error'); } }} onCancel={() => handlePageChange('cart')} />;
+      case 'profile': return currentUser ? <UserProfilePage user={currentUser} onUserUpdate={(u) => setCurrentUser(u)} onNotify={notify} /> : <LoginPage onLogin={handleLogin} onPageChange={handlePageChange} />;
       default: return <LandingPage onPageChange={handlePageChange} />;
     }
   };
@@ -132,7 +134,7 @@ const LoginPage = ({ onLogin, onPageChange }: any) => {
             <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-luxe-accent-dark" size={20} />
             <input className="w-full bg-luxe-dark border border-white/10 rounded-2xl pl-14 pr-6 py-5 outline-none focus:ring-2 focus:ring-luxe-accent-dark text-white" placeholder="Authorized Email..." value={email} onChange={e => setEmail(e.target.value)} />
           </div>
-          <button onClick={() => onLogin(email)} className="w-full bg-luxe-accent-dark text-white py-5 rounded-2xl font-black text-xl shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-2">Initialize <ArrowRight size={20}/></button>
+          <button onClick={() => onLogin(email)} className="w-full bg-luxe-accent-dark text-white py-5 rounded-2xl font-black text-xl shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-2">Initialize <ArrowRight size={20} /></button>
           <button onClick={() => onPageChange('register')} className="w-full text-slate-500 text-sm hover:text-white transition-colors">Request New Identity Access</button>
         </div>
       </div>
@@ -171,9 +173,9 @@ const CartPage = ({ cart, total, onUpdateQty, onRemove, onCheckout }: any) => (
                 <p className="text-luxe-accent-dark font-black">${i.price}</p>
               </div>
               <div className="flex items-center gap-4">
-                <button onClick={() => onUpdateQty(i.id, -1)} className="p-2 bg-white/5 rounded-lg text-white"><Minus size={14}/></button>
+                <button onClick={() => onUpdateQty(i.id, -1)} className="p-2 bg-white/5 rounded-lg text-white"><Minus size={14} /></button>
                 <span className="font-black text-white">{i.quantity}</span>
-                <button onClick={() => onUpdateQty(i.id, 1)} className="p-2 bg-white/5 rounded-lg text-white"><Plus size={14}/></button>
+                <button onClick={() => onUpdateQty(i.id, 1)} className="p-2 bg-white/5 rounded-lg text-white"><Plus size={14} /></button>
               </div>
               <button onClick={() => onRemove(i.id)} className="text-red-500 hover:bg-red-500/10 p-4 rounded-full"><Trash2 /></button>
             </div>

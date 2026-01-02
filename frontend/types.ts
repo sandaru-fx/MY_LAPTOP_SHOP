@@ -8,6 +8,9 @@ export interface User {
   role: Role;
   isActive: boolean;
   avatar?: string;
+  phone?: string;
+  address?: string;
+  joinedDate?: string;
 }
 
 export interface Review {

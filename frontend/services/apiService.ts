@@ -40,12 +40,12 @@ class APIService {
   async register(name: string, email: string): Promise<User> {
     const users: User[] = JSON.parse(localStorage.getItem('luxe_users') || JSON.stringify(INITIAL_USERS));
     if (users.some(u => u.email === email)) throw new Error("Identity already registered in global directory.");
-    
+
     const newUser: User = {
       id: `USR-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
       name, email, role: 'USER', isActive: true
     };
-    
+
     users.push(newUser);
     localStorage.setItem('luxe_users', JSON.stringify(users));
     return this.simulateNetwork(newUser);
@@ -59,7 +59,7 @@ class APIService {
 
   async saveLaptop(laptop: Omit<Laptop, 'id'> | Laptop): Promise<Laptop> {
     const laptops: Laptop[] = JSON.parse(localStorage.getItem('luxe_laptops') || JSON.stringify(INITIAL_LAPTOPS));
-    
+
     // Validation
     if (laptop.price <= 0) throw new Error("Price must be a positive asset value.");
     if (laptop.stock < 0) throw new Error("Stock cannot be negative.");
@@ -140,6 +140,41 @@ class APIService {
       localStorage.setItem('luxe_users', JSON.stringify(users));
     }
     return this.simulateNetwork(undefined);
+  }
+
+  // --- USER PROFILE ---
+  async updateUserProfile(userId: string, updates: Partial<User>): Promise<User> {
+    const users: User[] = JSON.parse(localStorage.getItem('luxe_users') || JSON.stringify(INITIAL_USERS));
+    const index = users.findIndex(u => u.id === userId);
+
+    if (index === -1) throw new Error("User not found in directory.");
+
+    // Validate email uniqueness if email is being updated
+    if (updates.email && updates.email !== users[index].email) {
+      if (users.some(u => u.email === updates.email && u.id !== userId)) {
+        throw new Error("Email already in use by another identity.");
+      }
+    }
+
+    users[index] = { ...users[index], ...updates };
+    localStorage.setItem('luxe_users', JSON.stringify(users));
+
+    // Update auth if this is the current user
+    const currentAuth = localStorage.getItem('luxe_auth');
+    if (currentAuth) {
+      const authUser = JSON.parse(currentAuth);
+      if (authUser.id === userId) {
+        localStorage.setItem('luxe_auth', JSON.stringify(users[index]));
+      }
+    }
+
+    return this.simulateNetwork(users[index]);
+  }
+
+  async getUserOrders(userId: string): Promise<Order[]> {
+    const orders: Order[] = JSON.parse(localStorage.getItem('luxe_orders') || '[]');
+    const userOrders = orders.filter(o => o.userId === userId);
+    return this.simulateNetwork(userOrders);
   }
 }
 

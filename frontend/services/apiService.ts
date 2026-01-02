@@ -176,6 +176,65 @@ class APIService {
     const userOrders = orders.filter(o => o.userId === userId);
     return this.simulateNetwork(userOrders);
   }
+
+  // --- GOOGLE SIGN-IN (Simulated) ---
+  async loginWithGoogle(): Promise<User> {
+    // Simulated Google OAuth - In production, this would use real Google OAuth
+    const googleUser: User = {
+      id: `USR-GOOGLE-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+      name: 'Google User',
+      email: `user${Math.floor(Math.random() * 1000)}@gmail.com`,
+      role: 'USER',
+      isActive: true,
+      avatar: `https://ui-avatars.com/api/?name=Google+User&background=0071e3&color=fff`,
+      joinedDate: new Date().toISOString(),
+    };
+
+    // Check if user already exists
+    const users: User[] = JSON.parse(localStorage.getItem('luxe_users') || JSON.stringify(INITIAL_USERS));
+    const existingUser = users.find(u => u.email === googleUser.email);
+
+    if (existingUser) {
+      localStorage.setItem('luxe_auth', JSON.stringify(existingUser));
+      return this.simulateNetwork(existingUser);
+    }
+
+    // Add new Google user
+    users.push(googleUser);
+    localStorage.setItem('luxe_users', JSON.stringify(users));
+    localStorage.setItem('luxe_auth', JSON.stringify(googleUser));
+
+    return this.simulateNetwork(googleUser);
+  }
+
+  // --- ADMIN LOGIN ---
+  async loginAdmin(email: string, password: string): Promise<User> {
+    // Validate admin credentials
+    if (email !== 'admin@luxelaptops.com' || password !== 'LuxeAdmin2025!') {
+      throw new Error('Invalid administrator credentials. Access denied.');
+    }
+
+    const users: User[] = JSON.parse(localStorage.getItem('luxe_users') || JSON.stringify(INITIAL_USERS));
+    let adminUser = users.find(u => u.email === email && u.role === 'ADMIN');
+
+    // If admin user doesn't exist, create it
+    if (!adminUser) {
+      adminUser = {
+        id: 'admin-1',
+        name: 'System Admin',
+        email: 'admin@luxelaptops.com',
+        role: 'ADMIN',
+        isActive: true,
+        avatar: 'https://ui-avatars.com/api/?name=System+Admin&background=0071e3&color=fff',
+        joinedDate: new Date().toISOString(),
+      };
+      users.push(adminUser);
+      localStorage.setItem('luxe_users', JSON.stringify(users));
+    }
+
+    localStorage.setItem('luxe_auth', JSON.stringify(adminUser));
+    return this.simulateNetwork(adminUser);
+  }
 }
 
 export const api = new APIService();

@@ -9,6 +9,7 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { LogoutPage } from './pages/LogoutPage';
 import { UserProfilePage } from './pages/UserProfilePage';
+import { AdminLoginPage } from './pages/AdminLoginPage';
 import { Toast, ToastType } from './components/Toast';
 import { LiveConcierge } from './components/LiveConcierge';
 import { AIChatWidget } from './components/AIChatWidget';
@@ -68,8 +69,33 @@ const App: React.FC = () => {
       if (u) {
         setCurrentUser(u);
         notify(`Authorized: Welcome back ${u.name}`);
-        handlePageChange(u.role === 'ADMIN' ? 'admin' : 'home');
+        setCurrentPage(u.role === 'ADMIN' ? 'admin' : 'home');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
+    } catch (err: any) {
+      notify(err.message, 'error');
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      const u = await api.loginWithGoogle();
+      setCurrentUser(u);
+      notify(`Welcome ${u.name}! Signed in with Google.`);
+      setCurrentPage('home');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err: any) {
+      notify(err.message, 'error');
+    }
+  };
+
+  const handleAdminLogin = async (email: string, password: string) => {
+    try {
+      const u = await api.loginAdmin(email, password);
+      setCurrentUser(u);
+      notify(`Administrator access granted. Welcome ${u.name}.`);
+      setCurrentPage('admin');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: any) {
       notify(err.message, 'error');
     }
@@ -101,7 +127,8 @@ const App: React.FC = () => {
       case 'shop': return <ShopPage onProductClick={(id) => notify("Technical specs detail pending implementation.")} />;
       case 'admin': return <AdminDashboard />;
       case 'cart': return <CartPage cart={cart} total={cartTotal} onUpdateQty={(id: string, d: number) => setCart(prev => prev.map(i => i.id === id ? { ...i, quantity: Math.max(1, i.quantity + d) } : i))} onRemove={(id: string) => setCart(prev => prev.filter(i => i.id !== id))} onCheckout={() => handlePageChange('checkout')} />;
-      case 'login': return <LoginPage onLogin={handleLogin} onPageChange={handlePageChange} />;
+      case 'login': return <LoginPage onLogin={handleLogin} onGoogleLogin={handleGoogleLogin} onPageChange={handlePageChange} />;
+      case 'admin-login': return <AdminLoginPage onAdminLogin={handleAdminLogin} onPageChange={handlePageChange} />;
       case 'logout': return <LogoutPage onConfirm={handleLogout} onCancel={() => handlePageChange('home')} />;
       case 'register': return <RegisterPage onRegister={async (n, e) => { try { await api.register(n, e); notify('Registered.'); handlePageChange('login'); } catch (err: any) { notify(err.message, 'error'); } }} onPageChange={handlePageChange} />;
       case 'checkout': return <CheckoutPage cart={cart} total={cartTotal} onPlaceOrder={async (addr, pay) => { try { await api.createOrder({ userId: currentUser?.id || 'guest', items: cart, total: cartTotal, status: 'Pending', paymentMethod: pay, shippingAddress: addr }); setCart([]); notify('Order Transmitted.'); handlePageChange('home'); } catch (err: any) { notify(err.message, 'error'); } }} onCancel={() => handlePageChange('cart')} />;
@@ -122,13 +149,37 @@ const App: React.FC = () => {
   );
 };
 
-const LoginPage = ({ onLogin, onPageChange }: any) => {
+const LoginPage = ({ onLogin, onGoogleLogin, onPageChange }: any) => {
   const [email, setEmail] = useState('');
   return (
     <div className="min-h-[90vh] flex flex-col items-center justify-center p-6 relative">
       <div className="glass p-14 rounded-[3.5rem] bg-luxe-card-dark border-white/10 shadow-3xl w-full max-w-xl animate-in fade-in duration-700">
         <h2 className="text-5xl font-black text-white tracking-tighter mb-4">Initialize Session</h2>
         <p className="text-slate-500 mb-10 font-bold uppercase tracking-widest text-xs">Identity Verification Node</p>
+
+        {/* Google Sign-In Button */}
+        <button
+          onClick={onGoogleLogin}
+          className="w-full bg-white hover:bg-gray-50 text-gray-800 py-5 rounded-2xl font-black text-lg shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 mb-6 group"
+        >
+          <svg className="w-6 h-6" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <div className="relative mb-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-white/10"></div>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-luxe-card-dark px-4 text-slate-500 font-black tracking-wider">Or use email</span>
+          </div>
+        </div>
+
         <div className="space-y-6">
           <div className="relative">
             <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-luxe-accent-dark" size={20} />
@@ -136,6 +187,17 @@ const LoginPage = ({ onLogin, onPageChange }: any) => {
           </div>
           <button onClick={() => onLogin(email)} className="w-full bg-luxe-accent-dark text-white py-5 rounded-2xl font-black text-xl shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-2">Initialize <ArrowRight size={20} /></button>
           <button onClick={() => onPageChange('register')} className="w-full text-slate-500 text-sm hover:text-white transition-colors">Request New Identity Access</button>
+
+          {/* Admin Login Link */}
+          <div className="pt-6 border-t border-white/10">
+            <button
+              onClick={() => onPageChange('admin-login')}
+              className="w-full text-xs text-blue-400 hover:text-blue-300 transition-colors font-bold flex items-center justify-center gap-2"
+            >
+              <ShieldCheck size={14} />
+              <span>Administrator Access Portal →</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

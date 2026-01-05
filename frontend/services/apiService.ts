@@ -2,7 +2,7 @@
 import { Laptop, User, Order, AnalyticsData, OrderStatus } from '../types';
 import { INITIAL_LAPTOPS, INITIAL_USERS, MOCK_REVENUE } from '../constants';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://my-laptop-shop.onrender.com/api';
 
 class APIService {
   private isBackendLive = false;

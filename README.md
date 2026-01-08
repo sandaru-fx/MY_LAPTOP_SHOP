@@ -83,8 +83,9 @@ Run the server:
 ```bash
 npm start
 ```
-### 3. Frontend Setup
 
+### 3. Frontend Setup
+```bash
 cd frontend # or whatever your frontend folder name is
 npm install
 
@@ -92,5 +93,6 @@ VITE_API_URL=http://localhost:5000
 
 npm run dev
 
+```
 
 

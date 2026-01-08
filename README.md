@@ -58,7 +58,33 @@ Follow these steps to run the project locally on your machine.
 ### Prerequisites
 Make sure you have **Node.js** and **npm** installed.
 
-### 1. Clone the Repository
+### 1. Clone the Repository 
 ```bash
 git clone [https://github.com/sandaru-fx/MY_LAPTOP_SHOP.git](https://github.com/sandaru-fx/MY_LAPTOP_SHOP.git)
 cd MY_LAPTOP_SHOP
+
+### 2. Backend Setup
+cd backend  # or whatever your backend folder name is
+npm install
+
+Create a .env file in the backend directory and add the following:
+
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_secret_key
+
+Run the server:
+
+npm start
+
+3. Frontend Setup
+
+cd frontend # or whatever your frontend folder name is
+npm install
+
+VITE_API_URL=http://localhost:5000
+
+npm run dev
+
+
+

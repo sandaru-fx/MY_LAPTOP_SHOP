@@ -80,8 +80,9 @@ JWT_SECRET=your_secret_key
 
 Run the server:
 
+```bash
 npm start
-
+```
 ### 3. Frontend Setup
 
 cd frontend # or whatever your frontend folder name is
